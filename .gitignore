@@ -1,6 +1,7 @@
 # Datasets (large, downloaded separately — see DATASETS.md / A100_GUIDE.md)
 datasets/
 data/
+upload_zips/
 
 # Python
 __pycache__/
