@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dentalmine"
+version = "0.1.0"
+description = "DentalMind — dental X-ray AI pipeline (Phase 1: OPG end-to-end)"
+requires-python = ">=3.10"
+
+[project.scripts]
+dentalmine = "cli:app"
+
+[tool.setuptools]
+py-modules = ["cli", "paths", "config_loader"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["schema*", "pipeline*", "models*", "data*", "training*", "scripts*"]

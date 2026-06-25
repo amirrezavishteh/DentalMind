@@ -1,0 +1,33 @@
+# DentalMind — Phase 1 runtime dependencies
+# (full pipeline deps from PROMPT.md STACK are listed but only Phase 1 ones
+#  are strictly required to run `dentalmine infer` on a 2D OPG image.)
+
+# --- Core (Phase 1, required) ---
+torch>=2.3
+torchvision
+ultralytics>=8.2          # YOLOv11 panoramic Stage-1 tooth detector
+open_clip_torch           # BiomedCLIP / MMKD-CLIP image-text encoders
+transformers>=4.40        # BiomedNLP-BiomedBERT tokenizer
+opencv-python
+Pillow
+numpy
+scipy                     # entropy (quality gate) + ndimage
+scikit-learn              # DBSCAN for C3 Strategy 2
+pydantic>=2.0             # schemas
+pyyaml                    # config + templates
+typer>=0.9                # CLI
+rich                      # CLI output
+pydicom                   # DICOM tag reading (router / quality gate)
+pytest
+
+# --- Later phases (CBCT / FMS / training); not needed for Phase 1 infer ---
+# timm>=1.0
+# nnunetv2
+# monai
+# SimpleITK
+# vtk
+# fastapi
+# uvicorn
+# wandb
+# gdown
+# plastimatch   (separate CLI tool)

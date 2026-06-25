@@ -1,0 +1,82 @@
+# DentalMind default config (Phase 1 — OPG end-to-end).
+# Sections for later phases (training, CBCT) are retained but unused in Phase 1.
+
+model:
+  encoder: vit_large_patch14_dinov2
+  encoder_checkpoint: null
+  dentvfm_weights: null
+  dentalsegemtator_weights: null
+  c1_k_cbct: 3
+  c1_k_fms: 1
+  c1_k_serial_bw: 2
+  use_vlm: false
+  vlm_model: Qwen/Qwen2-VL-7B-Instruct
+
+medclip:
+  # PRIMARY: MMKD-CLIP (ViT-B-16-quickgelu, distills 9 biomedical CLIPs).
+  # github.com/wangshansong1/MMKD-CLIP ; weights gdown 16pDQ2rI3VKezUl_WVxm1gVmhljQWxjJR
+  mmkd_weights: ./weights/MMKD_B16.pth     # set null to force BiomedCLIP fallback
+  mmkd_model_name: ViT-B-16-quickgelu
+  mmkd_text_encoder: microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract
+  mmkd_context_length: 256
+
+  # FALLBACK: BiomedCLIP (auto-downloads from HuggingFace if MMKD weights absent).
+  # This is the active path in Phase 1 (MMKD weights not yet downloaded).
+  biomedclip_hf_id: microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224
+  biomedclip_context_length: 256
+  biomedclip_threshold: 0.35
+  biomedclip_template: "{}"
+
+  # Dental ROI grounding — set when RegionMed-CLIP released (arXiv 2508.05244).
+  regionmed_weights: null
+
+  # MMKD-CLIP -> DentVFM distillation (Phase 3 aux loss; unused in Phase 1).
+  alignment_loss_weight: 0.10
+  alignment_projection_dim: 512
+
+inference:
+  nms_iou_threshold: 0.45
+  detection_score_threshold: 0.35
+  calibration_temperature: 1.3
+  review_flag_threshold: 0.55
+  c2_min_support: 3
+  c2_consistency_iou: 0.40
+  c2_physical_window_mm: 1.0
+  device: auto                 # auto | cpu | cuda
+  # Stage-1 panoramic tooth detector weights. null => use pretrained ultralytics
+  # YOLO as a structural placeholder (TODO: replace with DENTEX-trained ckpt).
+  panoramic_stage1_weights: null
+  panoramic_stage1_model: yolo11m.pt
+
+training:
+  batch_size: 32
+  learning_rate: 1.0e-4
+  weight_decay: 0.01
+  max_epochs: 100
+  warmup_epochs: 5
+  modality_weights:
+    bitewing: 0.35
+    panoramic: 0.35
+    periapical: 0.15
+    cbct_25d: 0.15
+
+data:
+  dentex_path: ../data/dentex/
+  bitewing_path: ../data/caries_zenodo/
+  cbct_path: ../data/cbct/
+  drr_output_path: ../data/drr/
+  pseudo_label_path: ../data/pseudo/
+  yolo_image_size: 640
+  dentvfm_image_size: 518
+
+quality:
+  min_snr_db: 15.0
+  min_entropy_bits: 4.5
+  max_overexposed_fraction: 0.40
+
+rendering:
+  overlay_alpha: 0.30
+  show_confidence: true
+  show_fdi_labels: true
+  cbct_3d_render: true
+  output_formats: [png, json, txt]

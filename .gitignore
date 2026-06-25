@@ -1,0 +1,33 @@
+# Datasets (large, downloaded separately — see DATASETS.md / A100_GUIDE.md)
+datasets/
+data/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+*.egg
+
+# Model weights / training artifacts
+weights/
+runs/
+ckpt/
+*.pt
+*.pth
+*.onnx
+
+# Outputs
+smoke_test/
+results/
+*.log
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude/

@@ -1,0 +1,209 @@
+# C4 Tier-1 treatment templates. One entry per PATTERN_LIBRARY key (11 total).
+# Placeholders filled by c4_prompts.generate_from_template:
+#   {tooth} {surface} {bone_mm} {age} {urgency_text}
+# Every rendered card appends the standard disclaimer (added in code).
+
+caries_enamel:
+  description: "Early enamel caries on {surface} surface of tooth {tooth}"
+  options:
+    - rank: 1
+      text: "Non-operative management: fluoride varnish + oral hygiene reinforcement"
+      when_to_use: "Lesion confined to enamel, no cavitation"
+    - rank: 2
+      text: "Resin infiltration of proximal lesion"
+      when_to_use: "Proximal enamel lesion, patient at moderate caries risk"
+    - rank: 3
+      text: "Sealant / preventive resin restoration"
+      when_to_use: "Pit-and-fissure enamel lesion"
+  tests_suggested:
+    - "Bitewing radiograph to assess lesion depth"
+    - "Caries risk assessment"
+  red_flags:
+    - "Radiographic progression past the DEJ → reclassify as dentin caries"
+
+caries_dentin:
+  description: "Dentin caries detected on {surface} surface of tooth {tooth}"
+  options:
+    - rank: 1
+      text: "Composite resin restoration after caries removal"
+      when_to_use: "Vital tooth, no symptoms, caries not near pulp"
+    - rank: 2
+      text: "Pulp vitality test before restoration; consider indirect pulp cap"
+      when_to_use: "Caries radiographically near pulp"
+    - rank: 3
+      text: "Root canal treatment + full coverage crown"
+      when_to_use: "Irreversible pulpitis or caries into pulp"
+  tests_suggested:
+    - "Cold vitality test"
+    - "Percussion test"
+    - "Periapical radiograph for apical status"
+  red_flags:
+    - "Spontaneous or lingering pain → urgent RCT referral"
+    - "Swelling or sinus tract → immediate treatment"
+    - "Radiographic periapical lesion alongside caries → endo complex pattern"
+
+caries_pulp_risk:
+  description: "Deep caries approaching the pulp on tooth {tooth}"
+  options:
+    - rank: 1
+      text: "Indirect pulp cap with biocompatible liner + restoration"
+      when_to_use: "Vital tooth, no irreversible pulpitis signs"
+    - rank: 2
+      text: "Root canal treatment followed by cuspal-coverage restoration"
+      when_to_use: "Pulp exposure or signs of irreversible pulpitis"
+    - rank: 3
+      text: "Extraction with prosthetic replacement plan"
+      when_to_use: "Non-restorable tooth"
+  tests_suggested:
+    - "Cold and electric pulp vitality tests"
+    - "Percussion and palpation"
+    - "Periapical radiograph"
+  red_flags:
+    - "Spontaneous nocturnal pain → irreversible pulpitis, expedite endo"
+    - "Pulp exposure on excavation → endodontic referral"
+
+caries_with_bone:
+  description: "Caries on tooth {tooth} with adjacent alveolar bone loss (~{bone_mm} mm)"
+  options:
+    - rank: 1
+      text: "Restore caries + periodontal therapy (scaling/root planing)"
+      when_to_use: "Localized bone loss, restorable tooth"
+    - rank: 2
+      text: "Caries control + periodontal re-evaluation in 6-8 weeks"
+      when_to_use: "Moderate periodontal involvement"
+    - rank: 3
+      text: "Multidisciplinary perio-restorative plan; consider extraction if hopeless"
+      when_to_use: "Severe combined caries + periodontal breakdown"
+  tests_suggested:
+    - "Full periodontal charting (probing depths)"
+    - "Cold vitality test"
+    - "Bitewing + periapical radiographs"
+  red_flags:
+    - "Mobility grade II-III → guarded prognosis"
+    - "Furcation involvement → escalate to perio specialist"
+
+caries_with_pal:
+  description: "Caries on tooth {tooth} with associated periapical lesion"
+  options:
+    - rank: 1
+      text: "Root canal treatment then definitive restoration"
+      when_to_use: "Restorable tooth with apical pathology"
+    - rank: 2
+      text: "Endodontic retreatment / apical surgery"
+      when_to_use: "Prior inadequate root filling with persistent lesion"
+    - rank: 3
+      text: "Extraction + replacement (implant/bridge)"
+      when_to_use: "Non-restorable or vertical root fracture"
+  tests_suggested:
+    - "Periapical radiograph (± CBCT for lesion extent)"
+    - "Percussion and palpation"
+    - "Sinus tract tracing if present"
+  red_flags:
+    - "Facial swelling / systemic signs → urgent drainage + antibiotics"
+    - "Rapidly enlarging lesion → rule out non-endodontic pathology"
+
+bone_loss_only:
+  description: "Isolated alveolar bone loss (~{bone_mm} mm) at tooth {tooth}"
+  options:
+    - rank: 1
+      text: "Non-surgical periodontal therapy (scaling and root planing)"
+      when_to_use: "Early-to-moderate bone loss"
+    - rank: 2
+      text: "Localized surgical periodontal therapy / regeneration"
+      when_to_use: "Intrabony defect not resolving non-surgically"
+    - rank: 3
+      text: "Maintenance with 3-month periodontal recall"
+      when_to_use: "Stabilized periodontium"
+  tests_suggested:
+    - "Full-mouth periodontal probing"
+    - "Plaque and bleeding indices"
+  red_flags:
+    - "Progressive attachment loss between visits → reassess systemic risk (diabetes, smoking)"
+
+multi_tooth_bone:
+  description: "Generalized bone loss involving multiple teeth (incl. tooth {tooth})"
+  options:
+    - rank: 1
+      text: "Comprehensive periodontal therapy + risk-factor control"
+      when_to_use: "Generalized periodontitis"
+    - rank: 2
+      text: "Referral to periodontist for staging/grading and surgical plan"
+      when_to_use: "Stage III-IV periodontitis"
+    - rank: 3
+      text: "Strategic extractions + prosthodontic rehabilitation"
+      when_to_use: "Multiple hopeless teeth"
+  tests_suggested:
+    - "Full-mouth periodontal charting + radiographic bone survey"
+    - "Screen for diabetes / smoking status"
+  red_flags:
+    - "Rapid generalized loss in younger patient → aggressive/grade C periodontitis"
+
+impaction:
+  description: "Impacted tooth {tooth}"
+  options:
+    - rank: 1
+      text: "Radiographic monitoring if asymptomatic and non-pathologic"
+      when_to_use: "Deeply impacted, no pathology, low risk"
+    - rank: 2
+      text: "Surgical extraction"
+      when_to_use: "Pericoronitis, caries on adjacent tooth, cyst, or orthodontic need"
+    - rank: 3
+      text: "Surgical exposure + orthodontic traction"
+      when_to_use: "Impacted canine to be aligned into the arch"
+  tests_suggested:
+    - "Panoramic radiograph (± CBCT for proximity to nerve/sinus)"
+    - "Assess adjacent tooth resorption"
+  red_flags:
+    - "Proximity to inferior alveolar nerve → CBCT before surgery"
+    - "Associated radiolucency → rule out dentigerous cyst/tumor"
+
+endo_complex:
+  description: "Complex endodontic involvement on tooth {tooth}"
+  options:
+    - rank: 1
+      text: "Root canal treatment by specialist (endodontist)"
+      when_to_use: "Restorable tooth with complex canal anatomy"
+    - rank: 2
+      text: "Endodontic microsurgery (apicoectomy)"
+      when_to_use: "Persistent periapical pathology after orthograde RCT"
+    - rank: 3
+      text: "Extraction + replacement"
+      when_to_use: "Non-restorable, fractured, or strategically unimportant tooth"
+  tests_suggested:
+    - "CBCT for canal morphology and lesion extent"
+    - "Vitality and percussion tests"
+  red_flags:
+    - "Vertical root fracture signs → extraction usually indicated"
+    - "Spreading infection → urgent management"
+
+calculus_only:
+  description: "Calculus deposits at tooth {tooth} without other pathology"
+  options:
+    - rank: 1
+      text: "Professional scaling and polishing"
+      when_to_use: "Supragingival/subgingival calculus"
+    - rank: 2
+      text: "Oral hygiene instruction + recall in 6 months"
+      when_to_use: "After debridement, low risk"
+  tests_suggested:
+    - "Periodontal screening (BPE/PSR)"
+  red_flags:
+    - "Bleeding on probing with pockets → reassess for periodontitis"
+
+restoration_issue:
+  description: "Defective/overhanging restoration on {surface} surface of tooth {tooth}"
+  options:
+    - rank: 1
+      text: "Replace or repair the defective restoration"
+      when_to_use: "Overhang, open margin, or secondary caries"
+    - rank: 2
+      text: "Recontour/polish overhang if minor"
+      when_to_use: "Small overhang without secondary caries"
+    - rank: 3
+      text: "Crown if remaining tooth structure is compromised"
+      when_to_use: "Extensive existing restoration / cusp loss"
+  tests_suggested:
+    - "Bitewing radiograph for marginal integrity + secondary caries"
+    - "Check occlusion"
+  red_flags:
+    - "Secondary caries under restoration → treat as caries pattern"
