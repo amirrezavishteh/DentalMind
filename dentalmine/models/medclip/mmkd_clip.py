@@ -5,13 +5,15 @@ MMKD-CLIP (ViT-B-16-quickgelu) distills 9 biomedical CLIPs; #1 AUC on X-ray.
   Weights: gdown 16pDQ2rI3VKezUl_WVxm1gVmhljQWxjJR -O weights/MMKD_B16.pth
 
 Activates automatically once ``weights/MMKD_B16.pth`` exists and the source
-repo is on ``external/MMKD-CLIP/src``. Until then MedCLIPFactory uses BiomedCLIP.
+repo is checked out at ``external/MMKD-CLIP``. Until then MedCLIPFactory uses
+BiomedCLIP.
 
 NOTE: this loader follows the official README exactly but has NOT been run
 locally in Phase 1 (weights not yet downloaded). API matches BiomedCLIPEncoder.
 """
 from __future__ import annotations
 
+import importlib
 import os
 import sys
 from typing import Dict, List
@@ -25,8 +27,27 @@ from models.medclip.base import DENTAL_PROMPTS, softmax
 from paths import PROJECT_ROOT
 
 DEFAULT_WEIGHTS = "./weights/MMKD_B16.pth"
-# The MMKD repo ships its own open_clip fork under src/; prepend to sys.path.
-_MMKD_SRC = PROJECT_ROOT / "external" / "MMKD-CLIP" / "src"
+# The MMKD repo vendors its own open_clip fork as a top-level package
+# (external/MMKD-CLIP/open_clip/), with extra exports (get_mean_std, HFTokenizer)
+# not present in the public pip open_clip_torch. Prepend the repo root itself
+# (not src/) so `import open_clip` resolves to the fork, and drop any
+# already-imported public open_clip module so it doesn't shadow it.
+_MMKD_REPO_ROOT = PROJECT_ROOT / "external" / "MMKD-CLIP"
+
+
+def _ensure_mmkd_open_clip_on_path():
+    repo_root = str(_MMKD_REPO_ROOT)
+    if repo_root not in sys.path:
+        sys.path.insert(0, repo_root)
+    else:
+        sys.path.remove(repo_root)
+        sys.path.insert(0, repo_root)
+    # If the public open_clip_torch package was already imported (e.g. by
+    # BiomedCLIPEncoder running first), purge it so the fork is loaded fresh.
+    for mod_name in list(sys.modules):
+        if mod_name == "open_clip" or mod_name.startswith("open_clip."):
+            del sys.modules[mod_name]
+    importlib.invalidate_caches()
 
 
 class MMKDCLIPEncoder:
@@ -38,8 +59,12 @@ class MMKDCLIPEncoder:
     text_embed_dim = 512
 
     def __init__(self, weights_path: str = DEFAULT_WEIGHTS, device: str = "cuda"):
-        if _MMKD_SRC.exists():
-            sys.path.insert(0, str(_MMKD_SRC))
+        if not _MMKD_REPO_ROOT.exists():
+            raise ImportError(
+                f"MMKD-CLIP repo not found at {_MMKD_REPO_ROOT}. "
+                f"git clone https://github.com/wangshansong1/MMKD-CLIP {_MMKD_REPO_ROOT}"
+            )
+        _ensure_mmkd_open_clip_on_path()
         from open_clip import create_model_and_transforms, get_mean_std, HFTokenizer
 
         self.device = device

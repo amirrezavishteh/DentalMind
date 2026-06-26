@@ -213,9 +213,15 @@ def train(args):
     opt = torch.optim.AdamW(trainable, lr=args.lr, weight_decay=1e-4)
     logit_scale = model.logit_scale.exp().item() if hasattr(model, "logit_scale") else 100.0
 
+    n_batches = len(loader)
+    print(f"Starting training: {args.epochs} epochs x {n_batches} batches "
+          f"(batch_size={args.batch_size}) on {device}", flush=True)
+
+    import time
     for epoch in range(args.epochs):
         total_loss, n_correct, n_total = 0.0, 0, 0
-        for images, label_idx in loader:
+        t_epoch = time.perf_counter()
+        for batch_idx, (images, label_idx) in enumerate(loader):
             images = images.to(device)
             label_idx = label_idx.to(device)
 
@@ -232,8 +238,14 @@ def train(args):
             n_correct += (logits.argmax(dim=-1) == label_idx).sum().item()
             n_total += images.size(0)
 
+            if batch_idx == 0 or (batch_idx + 1) % 10 == 0 or (batch_idx + 1) == n_batches:
+                elapsed = time.perf_counter() - t_epoch
+                print(f"  epoch {epoch+1}/{args.epochs} batch {batch_idx+1}/{n_batches} "
+                      f"loss={loss.item():.4f} running_acc={n_correct/n_total:.3f} "
+                      f"elapsed={elapsed:.1f}s", flush=True)
+
         print(f"epoch {epoch+1}/{args.epochs}  loss={total_loss/n_total:.4f}  "
-              f"acc={n_correct/n_total:.3f}")
+              f"acc={n_correct/n_total:.3f}", flush=True)
 
     out_path = Path(args.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)
