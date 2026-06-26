@@ -121,6 +121,26 @@ def train_phase3(config: str = typer.Option(...), resume: bool = False,
     _not_implemented("train phase3")
 
 
+@train_app.command("clip-backbone")
+def train_clip_backbone(
+    data_root: str = typer.Option("../data/2D", "--data-root"),
+    output: str = typer.Option("../weights/medclip_dental_finetuned.pt", "--output"),
+    epochs: int = typer.Option(10, "--epochs"),
+    batch_size: int = typer.Option(64, "--batch-size"),
+    lr: float = typer.Option(1e-5, "--lr"),
+    workers: int = typer.Option(4, "--workers"),
+    device: Optional[str] = typer.Option(None, "--device"),
+):
+    """Fine-tune the shared Med-CLIP image tower on 2D dental data (prototype loss)."""
+    from argparse import Namespace
+    from training.clip_finetune import train as run_clip_finetune
+
+    run_clip_finetune(Namespace(
+        data_root=data_root, output=output, epochs=epochs,
+        batch_size=batch_size, lr=lr, workers=workers, device=device,
+    ))
+
+
 @app.command()
 def serve(host: str = "0.0.0.0", port: int = 8080, checkpoint: Optional[str] = None):
     _not_implemented("serve")
