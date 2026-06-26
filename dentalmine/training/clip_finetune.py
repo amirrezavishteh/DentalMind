@@ -48,9 +48,14 @@ class CropExample:
     image_path: Path
     bbox_xyxy: Tuple[float, float, float, float]  # pixel coords
     label: str
+    split: str  # "train" | "val" — held out BY IMAGE, never by individual crop
 
 
 def _load_tufts_yolo_examples(root: Path) -> Tuple[List[CropExample], List[str]]:
+    """Respects Tufts' existing train/val image split (from tufts_to_yolo.py) —
+    crops from a val-split image are never mixed into train, so the held-out
+    set is genuinely unseen, not just a different crop of an image the model
+    already saw."""
     data_yaml = root / "tufts_yolo" / "data.yaml"
     if not data_yaml.exists():
         return [], []
@@ -73,7 +78,9 @@ def _load_tufts_yolo_examples(root: Path) -> Tuple[List[CropExample], List[str]]
                 cx, cy, bw, bh = float(cx), float(cy), float(bw), float(bh)
                 x1, y1 = (cx - bw / 2) * w, (cy - bh / 2) * h
                 x2, y2 = (cx + bw / 2) * w, (cy + bh / 2) * h
-                examples.append(CropExample(img_path, (x1, y1, x2, y2), f"fdi_{names[cls_idx]}"))
+                examples.append(CropExample(
+                    img_path, (x1, y1, x2, y2), f"fdi_{names[cls_idx]}", split,
+                ))
     fdi_labels = [f"fdi_{n}" for n in names]
     return examples, fdi_labels
 
@@ -91,17 +98,28 @@ def _iou(a, b) -> float:
     return inter / union if union > 0 else 0.0
 
 
-def _load_caries_zenodo_examples(root: Path, seed: int = 0) -> List[CropExample]:
+def _load_caries_zenodo_examples(
+    root: Path, seed: int = 0, val_fraction: float = 0.1,
+) -> List[CropExample]:
+    """No pre-existing split here (unlike Tufts), so assign one deterministically
+    PER IMAGE (not per crop) — every crop from a given x-ray goes to the same
+    split, so cavity/healthy crops from the same image never leak across train/val."""
     base = root / "caries_zenodo" / "Dataset" / "x-ray"
     xml_dir, img_dir = base / "xmls", base / "images"
     if not xml_dir.exists():
         return []
     rng = random.Random(seed)
+    xml_paths = sorted(xml_dir.glob("*.xml"))
+    rng.shuffle(xml_paths)
+    n_val = max(1, int(len(xml_paths) * val_fraction))
+    val_stems = {p.stem for p in xml_paths[:n_val]}
+
     examples = []
     for xml_path in sorted(xml_dir.glob("*.xml")):
         img_path = img_dir / f"{xml_path.stem}.jpg"
         if not img_path.exists():
             continue
+        split = "val" if xml_path.stem in val_stems else "train"
         tree = ET.parse(xml_path)
         root_el = tree.getroot()
         size = root_el.find("size")
@@ -112,7 +130,7 @@ def _load_caries_zenodo_examples(root: Path, seed: int = 0) -> List[CropExample]
             box = (float(bb.find("xmin").text), float(bb.find("ymin").text),
                    float(bb.find("xmax").text), float(bb.find("ymax").text))
             boxes.append(box)
-            examples.append(CropExample(img_path, box, "cavity"))
+            examples.append(CropExample(img_path, box, "cavity", split))
         # one random non-overlapping crop per image as a "healthy" negative
         for _ in range(5):
             cw, ch = w * 0.15, h * 0.15
@@ -120,7 +138,7 @@ def _load_caries_zenodo_examples(root: Path, seed: int = 0) -> List[CropExample]
             y1 = rng.uniform(0, max(1.0, h - ch))
             cand = (x1, y1, x1 + cw, y1 + ch)
             if all(_iou(cand, b) < 0.05 for b in boxes):
-                examples.append(CropExample(img_path, cand, "healthy"))
+                examples.append(CropExample(img_path, cand, "healthy", split))
                 break
     return examples
 
@@ -164,8 +182,12 @@ def build_dataset(data_root: Path, encoder):
         )
     labels = sorted({e.label for e in examples})
     label_to_idx = {lbl: i for i, lbl in enumerate(labels)}
-    ds = DentalCropDataset(examples, label_to_idx, encoder.preprocess)
-    return ds, labels
+
+    train_examples = [e for e in examples if e.split == "train"]
+    val_examples = [e for e in examples if e.split == "val"]
+    train_ds = DentalCropDataset(train_examples, label_to_idx, encoder.preprocess)
+    val_ds = DentalCropDataset(val_examples, label_to_idx, encoder.preprocess)
+    return train_ds, val_ds, labels
 
 
 def compute_prototypes(encoder, labels: List[str], device: str) -> torch.Tensor:
@@ -191,13 +213,21 @@ def train(args):
     print(f"Active encoder: {encoder.name}")
 
     data_root = Path(args.data_root)
-    ds, labels = build_dataset(data_root, encoder)
-    print(f"Dataset: {len(ds)} crops across {len(labels)} classes: {labels}")
+    train_ds, val_ds, labels = build_dataset(data_root, encoder)
+    print(f"Dataset: {len(train_ds)} train crops, {len(val_ds)} held-out val crops "
+          f"(split BY IMAGE, never by crop) across {len(labels)} classes: {labels}")
+    if len(val_ds) == 0:
+        print("WARNING: no held-out val crops — cannot check overfitting. "
+              "Falling back to reporting train metrics only.", flush=True)
 
     prototypes = compute_prototypes(encoder, labels, device)  # frozen, [N, D]
 
-    loader = DataLoader(ds, batch_size=args.batch_size, shuffle=True,
+    loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True,
                          num_workers=args.workers, drop_last=True)
+    val_loader = (
+        DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
+        if len(val_ds) > 0 else None
+    )
 
     model = encoder.model
     model.train()
@@ -217,7 +247,10 @@ def train(args):
     print(f"Starting training: {args.epochs} epochs x {n_batches} batches "
           f"(batch_size={args.batch_size}) on {device}", flush=True)
 
+    import copy
     import time
+
+    best_val_acc, best_state = -1.0, None
     for epoch in range(args.epochs):
         total_loss, n_correct, n_total = 0.0, 0, 0
         t_epoch = time.perf_counter()
@@ -244,14 +277,45 @@ def train(args):
                       f"loss={loss.item():.4f} running_acc={n_correct/n_total:.3f} "
                       f"elapsed={elapsed:.1f}s", flush=True)
 
-        print(f"epoch {epoch+1}/{args.epochs}  loss={total_loss/n_total:.4f}  "
-              f"acc={n_correct/n_total:.3f}", flush=True)
+        train_acc = n_correct / n_total
+        print(f"epoch {epoch+1}/{args.epochs}  train_loss={total_loss/n_total:.4f}  "
+              f"train_acc={train_acc:.3f}", flush=True)
+
+        if val_loader is not None:
+            val_loss, val_acc = evaluate(model, val_loader, prototypes, logit_scale, device)
+            print(f"epoch {epoch+1}/{args.epochs}  HELD-OUT val_loss={val_loss:.4f}  "
+                  f"val_acc={val_acc:.3f}  (gap vs train_acc: {train_acc - val_acc:+.3f})",
+                  flush=True)
+            if val_acc > best_val_acc:
+                best_val_acc = val_acc
+                best_state = copy.deepcopy(model.state_dict())
+            model.train()
 
     out_path = Path(args.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    torch.save({"model_state_dict": model.state_dict(), "labels": labels,
-                "encoder_name": encoder.name}, out_path)
-    print(f"Saved fine-tuned image tower -> {out_path}")
+    final_state = best_state if best_state is not None else model.state_dict()
+    torch.save({"model_state_dict": final_state, "labels": labels,
+                "encoder_name": encoder.name, "best_val_acc": best_val_acc}, out_path)
+    if best_state is not None:
+        print(f"Saved BEST checkpoint (val_acc={best_val_acc:.3f}) -> {out_path}")
+    else:
+        print(f"No val set was available — saved final-epoch weights -> {out_path}")
+
+
+@torch.no_grad()
+def evaluate(model, val_loader, prototypes, logit_scale, device) -> Tuple[float, float]:
+    model.eval()
+    total_loss, n_correct, n_total = 0.0, 0, 0
+    for images, label_idx in val_loader:
+        images = images.to(device)
+        label_idx = label_idx.to(device)
+        img_f = F.normalize(model.encode_image(images), dim=-1)
+        logits = logit_scale * img_f @ prototypes.T
+        loss = F.cross_entropy(logits, label_idx)
+        total_loss += loss.item() * images.size(0)
+        n_correct += (logits.argmax(dim=-1) == label_idx).sum().item()
+        n_total += images.size(0)
+    return total_loss / n_total, n_correct / n_total
 
 
 if __name__ == "__main__":
