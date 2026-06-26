@@ -19,6 +19,9 @@ ckpt/
 *.pth
 *.onnx
 
+# Third-party cloned repos (e.g. external/MMKD-CLIP) — not project source
+external/
+
 # Outputs
 smoke_test/
 results/
