@@ -32,7 +32,9 @@ DEFAULT_WEIGHTS = "./weights/MMKD_B16.pth"
 # not present in the public pip open_clip_torch. Prepend the repo root itself
 # (not src/) so `import open_clip` resolves to the fork, and drop any
 # already-imported public open_clip module so it doesn't shadow it.
-_MMKD_REPO_ROOT = PROJECT_ROOT / "external" / "MMKD-CLIP"
+# external/ lives at the project ROOT (sibling of dentalmine/), matching the
+# same convention as weights/ and data/ (see paths.resolve / config default.yaml).
+_MMKD_REPO_ROOT = PROJECT_ROOT.parent / "external" / "MMKD-CLIP"
 
 
 def _ensure_mmkd_open_clip_on_path():
