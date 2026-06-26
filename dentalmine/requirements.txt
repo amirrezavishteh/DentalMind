@@ -1,27 +1,55 @@
-# DentalMind — Phase 1 runtime dependencies
-# (full pipeline deps from PROMPT.md STACK are listed but only Phase 1 ones
-#  are strictly required to run `dentalmine infer` on a 2D OPG image.)
+# DentalMind — runtime dependencies.
+#
+# Versions are adaptive (minimum + upper bound only where a real incompatibility
+# is known) rather than hard-pinned, so `pip install -r requirements.txt` stays
+# installable as the ecosystem moves forward. Always install into a DEDICATED
+# virtualenv/conda env for this project — never into a shared environment that
+# also runs other pinned tools (vllm, xformers, etc.): an unpinned upgrade here
+# can cascade into breaking numpy/torch/transformers ABI compatibility elsewhere.
 
-# --- Core (Phase 1, required) ---
+# --- Core ML stack ---
 torch>=2.3
 torchvision
-ultralytics>=8.2          # YOLOv11 panoramic Stage-1 tooth detector
-open_clip_torch           # BiomedCLIP / MMKD-CLIP image-text encoders
-transformers>=4.40        # BiomedNLP-BiomedBERT tokenizer
-opencv-python
-Pillow
-numpy
-scipy                     # entropy (quality gate) + ndimage
-scikit-learn              # DBSCAN for C3 Strategy 2
-pydantic>=2.0             # schemas
-pyyaml                    # config + templates
-typer>=0.9                # CLI
-rich                      # CLI output
-pydicom                   # DICOM tag reading (router / quality gate)
-pytest
+torchaudio
 
-# --- Later phases (CBCT / FMS / training); not needed for Phase 1 infer ---
-# timm>=1.0
+# --- Med-CLIP encoders (BiomedCLIP primary fallback, MMKD-CLIP when weights+repo present) ---
+open_clip_torch>=2.24
+# transformers<5.0: MMKD-CLIP's vendored open_clip fork (external/MMKD-CLIP/open_clip/hf_model.py)
+# and BiomedCLIP's HF text-tower loading break under transformers 5.x (confirmed by a live
+# breakage on our A100 server — transformers 5.12.1 broke the generation/candidate_generator
+# import chain). Keep below 5.0 until that fork is updated.
+transformers>=4.40,<5.0
+huggingface_hub>=0.20
+sentencepiece                # tokenizer backend for some HF text encoders
+ftfy                          # text cleaning used by open_clip tokenizers
+regex                         # used by open_clip tokenizers
+
+# --- Detection / vision heads ---
+ultralytics>=8.2              # YOLOv11 panoramic Stage-1 tooth detector
+timm>=1.0                     # ViT/Swin backbones (later modality heads)
+
+# --- Image processing ---
+opencv-python>=4.8
+Pillow>=10.0
+numpy>=1.24
+scipy>=1.10                   # quality-gate entropy/noise estimation + ndimage
+scikit-learn>=1.3             # DBSCAN fallback clustering (C3 Strategy 2)
+
+# --- Schemas / config / CLI ---
+pydantic>=2.0
+pyyaml>=6.0
+typer>=0.9
+rich>=13.0
+
+# --- Data I/O ---
+pydicom>=2.4                  # DICOM tag reading (router / quality gate)
+gdown>=5.0                    # Google Drive weight downloads (MMKD-CLIP)
+
+# --- Dev / testing ---
+pytest>=7.4
+
+# --- Future phases (CBCT / FMS / nnU-Net / serving); not required for Phase 1 infer
+# or the current CLIP fine-tuning training script. Uncomment when implementing:
 # nnunetv2
 # monai
 # SimpleITK
@@ -29,5 +57,4 @@ pytest
 # fastapi
 # uvicorn
 # wandb
-# gdown
-# plastimatch   (separate CLI tool)
+# plastimatch   (separate CLI tool, not pip-installable)
