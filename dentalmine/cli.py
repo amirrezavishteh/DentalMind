@@ -130,6 +130,7 @@ def train_clip_backbone(
     lr: float = typer.Option(1e-5, "--lr"),
     workers: int = typer.Option(4, "--workers"),
     device: Optional[str] = typer.Option(None, "--device"),
+    config: Optional[str] = typer.Option(None, "--config"),
 ):
     """Fine-tune the shared Med-CLIP image tower on 2D dental data (prototype loss)."""
     from argparse import Namespace
@@ -137,7 +138,7 @@ def train_clip_backbone(
 
     run_clip_finetune(Namespace(
         data_root=data_root, output=output, epochs=epochs,
-        batch_size=batch_size, lr=lr, workers=workers, device=device,
+        batch_size=batch_size, lr=lr, workers=workers, device=device, config=config,
     ))
 
 

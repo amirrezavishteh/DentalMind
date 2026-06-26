@@ -176,9 +176,12 @@ def compute_prototypes(encoder, labels: List[str], device: str) -> torch.Tensor:
 
 
 def train(args):
+    from config_loader import load_config
+
     device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
+    cfg = load_config(getattr(args, "config", None))
     print(f"Loading Med-CLIP encoder on {device}...")
-    encoder = MedCLIPFactory.get(config=None, device=device, cache=False)
+    encoder = MedCLIPFactory.get(config=cfg, device=device, cache=False)
     if not hasattr(encoder, "model") or not hasattr(encoder, "tokenizer"):
         raise RuntimeError(
             f"Active encoder '{getattr(encoder, 'name', type(encoder))}' has no "
@@ -248,4 +251,5 @@ if __name__ == "__main__":
     ap.add_argument("--lr", type=float, default=1e-5)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--device", default=None)
+    ap.add_argument("--config", default=None, help="Path to config YAML (default: config/default.yaml)")
     train(ap.parse_args())
