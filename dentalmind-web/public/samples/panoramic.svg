@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="500" viewBox="0 0 900 500">
+  <rect width="900" height="500" fill="#05080f"/>
+  <rect width="900" height="500" fill="url(#grad2)" opacity="0.5"/>
+  <defs>
+    <radialGradient id="grad2" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#1a2236"/>
+      <stop offset="100%" stop-color="#05080f"/>
+    </radialGradient>
+  </defs>
+  <path d="M120 250 Q120 120 450 110 Q780 120 780 250 Q780 380 450 390 Q120 380 120 250 Z" fill="none" stroke="#3a4566" stroke-width="3" opacity="0.6"/>
+  <g fill="#cdd6e0" opacity="0.5">
+    <path d="M180 200 q20 -50 50 -10 q15 25 0 55 q-10 35 -35 35 q-30 0 -30 -35 q0 -25 15 -45 Z"/>
+    <path d="M250 180 q20 -45 50 -10 q15 25 0 55 q-10 35 -35 35 q-30 0 -30 -35 q0 -25 15 -45 Z"/>
+    <path d="M330 170 q20 -45 50 -10 q15 25 0 55 q-10 35 -35 35 q-30 0 -30 -35 q0 -25 15 -45 Z"/>
+    <path d="M420 165 q20 -40 50 -10 q15 25 0 55 q-10 35 -35 35 q-30 0 -30 -35 q0 -25 15 -45 Z"/>
+    <path d="M510 165 q20 -40 50 -10 q15 25 0 55 q-10 35 -35 35 q-30 0 -30 -35 q0 -25 15 -45 Z"/>
+    <path d="M600 170 q20 -45 50 -10 q15 25 0 55 q-10 35 -35 35 q-30 0 -30 -35 q0 -25 15 -45 Z"/>
+    <path d="M680 180 q20 -45 50 -10 q15 25 0 55 q-10 35 -35 35 q-30 0 -30 -35 q0 -25 15 -45 Z"/>
+    <path d="M180 320 q20 50 50 10 q15 -25 0 -55 q-10 -35 -35 -35 q-30 0 -30 35 q0 25 15 45 Z"/>
+    <path d="M260 335 q20 45 50 10 q15 -25 0 -55 q-10 -35 -35 -35 q-30 0 -30 35 q0 25 15 45 Z"/>
+    <path d="M350 345 q20 40 50 10 q15 -25 0 -55 q-10 -35 -35 -35 q-30 0 -30 35 q0 25 15 45 Z"/>
+    <path d="M450 348 q20 40 50 10 q15 -25 0 -55 q-10 -35 -35 -35 q-30 0 -30 35 q0 25 15 45 Z"/>
+    <path d="M550 345 q20 40 50 10 q15 -25 0 -55 q-10 -35 -35 -35 q-30 0 -30 35 q0 25 15 45 Z"/>
+    <path d="M640 335 q20 45 50 10 q15 -25 0 -55 q-10 -35 -35 -35 q-30 0 -30 35 q0 25 15 45 Z"/>
+    <path d="M720 320 q20 50 50 10 q15 -25 0 -55 q-10 -35 -35 -35 q-30 0 -30 35 q0 25 15 45 Z"/>
+  </g>
+  <text x="450" y="470" text-anchor="middle" font-family="monospace" font-size="14" fill="#3a4566">PANORAMIC (OPG) — SIMULATED RADIOGRAPH</text>
+</svg>

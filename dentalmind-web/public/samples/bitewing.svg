@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#05080f"/>
+  <rect width="800" height="600" fill="url(#grad)" opacity="0.5"/>
+  <defs>
+    <radialGradient id="grad" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#1a2236"/>
+      <stop offset="100%" stop-color="#05080f"/>
+    </radialGradient>
+  </defs>
+  <g fill="#cdd6e0" opacity="0.55">
+    <path d="M180 180 q40 -60 90 -10 q20 30 0 70 q-10 50 -50 60 q-50 10 -60 -40 q-10 -40 20 -80 Z"/>
+    <path d="M300 170 q45 -55 95 -5 q20 35 -5 75 q-15 50 -55 55 q-50 5 -55 -45 q-5 -45 20 -80 Z"/>
+    <path d="M430 175 q45 -55 95 -5 q20 35 -5 80 q-15 50 -55 55 q-55 5 -60 -45 q-5 -45 25 -85 Z"/>
+    <path d="M560 185 q40 -55 90 -10 q20 35 -5 75 q-15 45 -50 50 q-50 5 -55 -40 q-5 -40 20 -75 Z"/>
+    <path d="M190 360 q40 55 90 10 q20 -30 0 -70 q-10 -50 -50 -60 q-50 -10 -60 40 q-10 40 20 80 Z"/>
+    <path d="M320 370 q45 50 95 5 q20 -35 -5 -75 q-15 -50 -55 -55 q-50 -5 -55 45 q-5 45 20 80 Z"/>
+    <path d="M450 365 q45 50 95 5 q20 -35 -5 -80 q-15 -50 -55 -55 q-55 -5 -60 45 q-5 45 25 85 Z"/>
+  </g>
+  <text x="400" y="560" text-anchor="middle" font-family="monospace" font-size="14" fill="#3a4566">BITEWING — SIMULATED RADIOGRAPH</text>
+</svg>
