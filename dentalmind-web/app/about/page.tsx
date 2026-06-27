@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { Layers, GitMerge, ShieldCheck } from "lucide-react";
+import { Layers, GitMerge, ShieldCheck, ArrowUpRight } from "lucide-react";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+
+const RESEARCH_BLOG_URL = "https://amirrezavishteh.github.io/blog/";
 
 export const metadata: Metadata = {
   title: "About",
@@ -83,6 +85,37 @@ export default function AboutPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="container mt-24 max-w-3xl">
+        <SectionHeading
+          eyebrow="Beyond DentalMind"
+          title="A broader focus: trustworthy AI for healthcare"
+          align="left"
+          className="mx-0"
+        />
+        <div className="flex flex-col gap-6 text-base leading-relaxed text-text-muted">
+          <p>
+            DentalMind is the first proof point of a wider research direction: building AI that
+            healthcare practitioners can actually trust — systems that are transparent about their
+            limits, resistant to the failure modes that erode confidence, and designed to support a
+            clinician&apos;s judgment rather than override it. The &ldquo;suggest, don&apos;t
+            diagnose&rdquo; principle behind this product is one expression of that thesis.
+          </p>
+          <p>
+            I write about that broader research agenda — trustworthy AI and AI safety, applied to
+            healthcare and beyond — on my personal research blog.
+          </p>
+        </div>
+        <a
+          href={RESEARCH_BLOG_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+        >
+          Read the research blog
+          <ArrowUpRight className="h-4 w-4" />
+        </a>
       </div>
 
       <div className="container mt-24 max-w-3xl">
