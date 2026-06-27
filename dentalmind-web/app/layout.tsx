@@ -25,13 +25,15 @@ export const metadata: Metadata = {
     template: "%s — DentalMind",
   },
   description:
-    "DentalMind analyzes Bitewing, Panoramic, Periapical, FMS and CBCT in one pipeline. Per-tooth clustering and ranked treatment prompts for dentists.",
+    "DentalMind analyzes Bitewing, Panoramic, Periapical, FMS and CBCT in one pipeline. Per-tooth clustering and ranked treatment prompts for dentists — built on a trustworthy-AI approach to healthcare.",
   keywords: [
     "dental AI",
     "caries detection",
     "CBCT segmentation",
     "panoramic AI",
     "dental radiology AI",
+    "trustworthy AI",
+    "healthcare AI",
   ],
   authors: [{ name: "DentalMind" }],
   openGraph: {

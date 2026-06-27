@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 
+const RESEARCH_BLOG_URL = "https://amirrezavishteh.github.io/blog/";
+
 const COLUMNS = [
   {
     title: "Product",
@@ -17,6 +19,7 @@ const COLUMNS = [
       { href: "/research", label: "Research" },
       { href: "/blog", label: "Blog" },
       { href: "/contact", label: "Contact" },
+      { href: RESEARCH_BLOG_URL, label: "Founder's Research Blog ↗", external: true },
     ],
   },
 ];
@@ -37,7 +40,8 @@ export function Footer() {
             </Link>
             <p className="mt-4 max-w-sm text-sm text-text-muted">
               AI-powered radiograph analysis for dental clinics and hospitals — one pipeline
-              across Bitewing, Panoramic, Periapical, Full-Mouth Series and CBCT.
+              across Bitewing, Panoramic, Periapical, Full-Mouth Series and CBCT. Built as the
+              first proof point of a broader research focus on trustworthy AI for healthcare.
             </p>
           </div>
 
@@ -47,16 +51,29 @@ export function Footer() {
                 {col.title}
               </h4>
               <ul className="space-y-3">
-                {col.links.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-text-muted transition-colors hover:text-primary"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
+                {col.links.map((link) =>
+                  "external" in link && link.external ? (
+                    <li key={link.href}>
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-text-muted transition-colors hover:text-primary"
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ) : (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        className="text-sm text-text-muted transition-colors hover:text-primary"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ),
+                )}
               </ul>
             </div>
           ))}

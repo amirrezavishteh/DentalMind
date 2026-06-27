@@ -72,6 +72,24 @@ export function Hero() {
               </Button>
             </Link>
           </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.05, duration: 0.5 }}
+            className="mt-6 text-xs text-text-muted"
+          >
+            Part of a broader research focus on trustworthy AI for healthcare —{" "}
+            <a
+              href="https://amirrezavishteh.github.io/blog/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-primary hover:text-primary/80"
+            >
+              read the blog
+            </a>
+            .
+          </motion.p>
         </div>
 
         <motion.div
