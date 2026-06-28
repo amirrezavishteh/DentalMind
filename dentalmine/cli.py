@@ -110,15 +110,78 @@ def _not_implemented(name: str):
 
 
 @train_app.command("phase1")
-def train_phase1(data_dir: str = typer.Option(...), epochs: int = 100,
-                 fast_dev_run: bool = typer.Option(False, "--fast-dev-run")):
-    _not_implemented("train phase1")
+def train_phase1(
+    data_dir: str = typer.Option("../data/2D", "--data-dir"),
+    output: str = typer.Option("../weights/dentvfm_phase1.pt", "--output"),
+    model: str = typer.Option("vit_large_patch14_dinov2", "--model"),
+    img_size: int = typer.Option(518, "--img-size"),
+    epochs: int = typer.Option(100, "--epochs"),
+    batch_size: int = typer.Option(64, "--batch-size"),
+    device: Optional[str] = typer.Option(None, "--device"),
+    pretrained: bool = typer.Option(False, "--pretrained"),
+    fast_dev_run: bool = typer.Option(False, "--fast-dev-run"),
+):
+    """Phase 1: self-supervised pretrain the DentVFM backbone on 2D images."""
+    from training.phase1_pretrain import build_argparser, train
+    ns = build_argparser().parse_args([])
+    ns.data_dir, ns.output, ns.model, ns.img_size = data_dir, output, model, img_size
+    ns.epochs, ns.batch_size, ns.device = epochs, batch_size, device
+    ns.pretrained, ns.fast_dev_run = pretrained, fast_dev_run
+    train(ns)
+
+
+@train_app.command("phase2")
+def train_phase2(
+    cbct_dir: str = typer.Option("../data/3D/cbct", "--cbct-dir"),
+    labels_dir: Optional[str] = typer.Option(None, "--labels-dir"),
+    backbone_ckpt: Optional[str] = typer.Option(None, "--backbone-ckpt"),
+    output: str = typer.Option("../weights/c1_adapter.pt", "--output"),
+    epochs: int = typer.Option(50, "--epochs"),
+    device: Optional[str] = typer.Option(None, "--device"),
+    fast_dev_run: bool = typer.Option(False, "--fast-dev-run"),
+):
+    """Phase 2: train the C1 cross-slice adapter on CBCT (data-gated)."""
+    from training.phase2_c1_adapter import build_argparser, train
+    ns = build_argparser().parse_args([])
+    ns.cbct_dir, ns.labels_dir, ns.backbone_ckpt = cbct_dir, labels_dir, backbone_ckpt
+    ns.output, ns.epochs, ns.device, ns.fast_dev_run = output, epochs, device, fast_dev_run
+    train(ns)
 
 
 @train_app.command("phase3")
-def train_phase3(config: str = typer.Option(...), resume: bool = False,
-                 fast_dev_run: bool = typer.Option(False, "--fast-dev-run")):
-    _not_implemented("train phase3")
+def train_phase3(
+    data_root: str = typer.Option("../data/2D", "--data-root"),
+    output: str = typer.Option("../weights/phase3_heads.pt", "--output"),
+    backbone_ckpt: Optional[str] = typer.Option(None, "--backbone-ckpt"),
+    model: str = typer.Option("vit_large_patch14_dinov2", "--model"),
+    img_size: int = typer.Option(518, "--img-size"),
+    epochs: int = typer.Option(30, "--epochs"),
+    batch_size: int = typer.Option(64, "--batch-size"),
+    device: Optional[str] = typer.Option(None, "--device"),
+    fast_dev_run: bool = typer.Option(False, "--fast-dev-run"),
+):
+    """Phase 3: multitask heads on frozen DentVFM + Med-CLIP alignment loss."""
+    from training.phase3_multitask import build_argparser, train
+    ns = build_argparser().parse_args([])
+    ns.data_root, ns.output, ns.backbone_ckpt = data_root, output, backbone_ckpt
+    ns.model, ns.img_size, ns.epochs = model, img_size, epochs
+    ns.batch_size, ns.device, ns.fast_dev_run = batch_size, device, fast_dev_run
+    train(ns)
+
+
+@train_app.command("phase4")
+def train_phase4(
+    cbct_dir: str = typer.Option("../data/3D/cbct", "--cbct-dir"),
+    masks_dir: Optional[str] = typer.Option(None, "--masks-dir"),
+    pseudo_output: str = typer.Option("../data/pseudo", "--pseudo-output"),
+    fast_dev_run: bool = typer.Option(False, "--fast-dev-run"),
+):
+    """Phase 4: 3D->2D distillation to pseudo-labelled DRRs (data-gated)."""
+    from training.phase4_distillation import build_argparser, train
+    ns = build_argparser().parse_args([])
+    ns.cbct_dir, ns.masks_dir, ns.pseudo_output = cbct_dir, masks_dir, pseudo_output
+    ns.fast_dev_run = fast_dev_run
+    train(ns)
 
 
 @train_app.command("clip-backbone")
