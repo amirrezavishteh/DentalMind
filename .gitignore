@@ -1,7 +1,10 @@
 # Datasets (large, downloaded separately — see DATASETS.md / A100_GUIDE.md)
-datasets/
-data/
-upload_zips/
+# Root-anchored (leading /) so these match ONLY the top-level dataset folders,
+# NOT the dentalmine/data/ source package.
+/datasets/
+/data/
+/upload_zips/
+/dentalmind-web/
 
 # Python
 __pycache__/
