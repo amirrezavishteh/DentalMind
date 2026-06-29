@@ -233,14 +233,40 @@ def train_clip_backbone(
 
 
 @app.command()
-def serve(host: str = "0.0.0.0", port: int = 8080, checkpoint: Optional[str] = None):
-    _not_implemented("serve")
+def serve(
+    host: str = typer.Option("0.0.0.0", "--host"),
+    port: int = typer.Option(8080, "--port"),
+    checkpoint: Optional[str] = typer.Option(None, "--checkpoint"),
+    config: Optional[str] = typer.Option(None, "--config"),
+    device: Optional[str] = typer.Option(None, "--device"),
+):
+    """Serve the pipeline over HTTP (FastAPI): GET /health, POST /infer."""
+    from pipeline.serve import serve as run_serve
+    console.print(f"[cyan]Serving DentalMind at http://{host}:{port}  (POST /infer)[/cyan]")
+    run_serve(host=host, port=port, config_path=config, checkpoint=checkpoint, device=device)
 
 
 @app.command()
-def eval(checkpoint: str = typer.Option(...), test_dir: str = typer.Option(...),
-         modality: str = "opg"):
-    _not_implemented("eval")
+def eval(
+    test_dir: str = typer.Option(..., "--test-dir"),
+    modality: str = typer.Option("auto", "--modality"),
+    checkpoint: Optional[str] = typer.Option(None, "--checkpoint"),
+    config: Optional[str] = typer.Option(None, "--config"),
+    device: Optional[str] = typer.Option(None, "--device"),
+    report: Optional[str] = typer.Option(None, "--report", help="Write JSON report to this path."),
+):
+    """Batch-evaluate over a folder; prints an aggregate inference report."""
+    import json
+    from pipeline.evaluate import evaluate_dir
+
+    rep = evaluate_dir(test_dir, modality=modality, config_path=config,
+                       checkpoint=checkpoint, device=device)
+    summary = {k: v for k, v in rep.items() if k != "per_image"}
+    console.print(summary)
+    if report:
+        with open(report, "w", encoding="utf-8") as fh:
+            json.dump(rep, fh, indent=2)
+        console.print(f"[green]Full report written to[/green] {report}")
 
 
 @data_app.command("download-dentex")

@@ -46,6 +46,11 @@ pydicom>=2.4                  # DICOM tag reading (router / quality gate)
 SimpleITK>=2.3               # CBCT volume loading (3D inference path)
 gdown>=5.0                    # Google Drive weight downloads (MMKD-CLIP)
 
+# --- Serving (dentalmine serve) ---
+fastapi>=0.110
+uvicorn>=0.27
+python-multipart>=0.0.9       # multipart file upload for POST /infer
+
 # --- Dev / testing ---
 pytest>=7.4
 

@@ -195,6 +195,18 @@ resulting `best.pt`.
 
 ---
 
+## 4b. Serve & evaluate
+
+```bash
+# HTTP API (FastAPI): GET /health, POST /infer (multipart image upload)
+dentalmine serve --host 0.0.0.0 --port 8080
+curl -F "file=@scan.png" "http://localhost:8080/infer?modality=opg"
+
+# batch inference report over a folder (honest cluster/severity/timing stats,
+# NOT mAP — for detector mAP use `yolo detect val ...`)
+dentalmine eval --test-dir ../data/2D/tufts_yolo/images/val --modality opg --report eval.json
+```
+
 ## 5. Install & test
 
 ```bash
@@ -224,7 +236,8 @@ dentalmine/
 │   ├── medclip/                 MMKD-CLIP → BiomedCLIP → Stub factory
 │   ├── madclip/                 c1 (cross-slice), c2 (consistency), c3 (cluster), c4 (prompts)
 │   └── heads/                   panoramic (OPG), bitewing, periapical, cbct heads
-├── pipeline/                    router, preprocessor, postprocessor, overlay, inference_engine
+├── pipeline/                    router, preprocessor, postprocessor, overlay,
+│                                inference_engine, serve (FastAPI), evaluate (batch report)
 ├── training/
 │   ├── baseline_clip_2d3d.py    ⭐ unified shared-CLIP 2D+3D baseline
 │   ├── clip_finetune.py         2D CLIP fine-tune (finetune_2d, reused by baseline)
