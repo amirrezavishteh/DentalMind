@@ -1,7 +1,8 @@
-"""Preprocessor — Phase 1 implements preprocess_2d only.
+"""Preprocessor — 2D (CLAHE + crop + normalize) and CBCT slice preprocessing.
 
-CLAHE + foreground crop + normalization, producing both a YOLO-sized (640) and
-a DentVFM-sized (518) tensor. CBCT/FMS preprocessing is deferred to a later phase.
+preprocess_2d  -> YOLO-sized + DentVFM-sized tensors for a single 2D image.
+preprocess_cbct -> per-slice uint8 RGB images (for the shared CLIP encoder)
+                   + physical slice spacing, for the 3D inference path.
 """
 from __future__ import annotations
 
@@ -99,3 +100,22 @@ class Preprocessor:
         rgb = cv2.resize(rgb, (size, size), interpolation=cv2.INTER_LINEAR)
         rgb = (rgb - IMAGENET_MEAN) / IMAGENET_STD
         return np.ascontiguousarray(rgb.transpose(2, 0, 1))
+
+    # ---- CBCT (3D) -----------------------------------------------------
+    def preprocess_cbct(self, slices, spacing_mm: float = 1.0):
+        """Per-slice normalization for the 3D path.
+
+        Returns (display_slices, spacing_mm) where each display slice is a uint8
+        RGB image suitable for the shared CLIP encoder / overlay rendering. The
+        volume is z-score normalized as a whole (preserves cross-slice intensity
+        relationships that C2 relies on), then per-slice min-max stretched to 8-bit.
+        """
+        vol = np.stack([np.asarray(s, dtype=np.float32) for s in slices], axis=0)
+        vol = (vol - vol.mean()) / (vol.std() + 1e-6)
+        display = []
+        for sl in vol:
+            mn, mx = float(sl.min()), float(sl.max())
+            g = (sl - mn) / (mx - mn) * 255.0 if mx > mn else np.zeros_like(sl)
+            g8 = self.clahe.apply(g.astype(np.uint8))
+            display.append(cv2.cvtColor(g8, cv2.COLOR_GRAY2BGR))
+        return display, spacing_mm

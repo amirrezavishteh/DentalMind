@@ -109,6 +109,29 @@ Outputs in `--output/`: `findings.json` (schema-validated), `original.png`,
 `annotated.png` (colour overlay), `treatment_card.txt` (ranked per-tooth options
 + disclaimer), `summary.txt` (plain-language patient summary).
 
+### 2b. CBCT (3D) inference — "after CLIP, see neighbours and decide"
+The 3D path is wired into the same engine. Point `--input` at a CBCT volume
+(`.nii`/`.nii.gz`) or a DICOM-series directory (auto-detected; or `--modality cbct`):
+
+```bash
+dentalmine infer --input scan.nii.gz --modality cbct --output ./results_cbct/ --device cuda
+```
+Flow (`pipeline/inference_engine.py::_infer_cbct`):
+```
+volume → axial slices → shared CLIP encodes each slice → per-slice detections
+   → C1  SEE NEIGHBOURS : cross-slice attention fuses adjacent slices (trained path)
+   → C2  DECIDE         : keep a finding only if it persists across ≥K neighbour
+                          slices — a real lesion appears on several slices, single-
+                          slice noise is rejected   ← the core 3D reasoning
+   → C3 cluster across slices → C4 ranked prompts → representative-slice overlay
+```
+Verified end-to-end on a synthetic volume: a planted periapical lesion spanning
+4 slices survives C2 and becomes an `endo_complex / CRITICAL` finding, while
+single-slice noise is removed. Needs `SimpleITK` (in requirements) to read volumes.
+The trained 2.5D head that consumes C1-enriched features comes from Phase 2 /
+the baseline 3D branch once CBCT training data exists; the current detector is
+CLIP zero-shot per slice.
+
 ---
 
 ## 3. Training phases (PROMPT.md Phases 1–4)

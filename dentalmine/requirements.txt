@@ -43,16 +43,16 @@ rich>=13.0
 
 # --- Data I/O ---
 pydicom>=2.4                  # DICOM tag reading (router / quality gate)
+SimpleITK>=2.3               # CBCT volume loading (3D inference path)
 gdown>=5.0                    # Google Drive weight downloads (MMKD-CLIP)
 
 # --- Dev / testing ---
 pytest>=7.4
 
-# --- Future phases (CBCT / FMS / nnU-Net / serving); not required for Phase 1 infer
-# or the current CLIP fine-tuning training script. Uncomment when implementing:
+# --- Future phases (nnU-Net 3D seg / serving); not required for current pipeline.
+# Uncomment when implementing:
 # nnunetv2
 # monai
-# SimpleITK
 # vtk
 # fastapi
 # uvicorn
