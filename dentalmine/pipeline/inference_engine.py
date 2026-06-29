@@ -69,13 +69,24 @@ class InferenceEngine:
             yolo_size=int(data.get("yolo_image_size", 640)),
             dentvfm_size=int(data.get("dentvfm_image_size", 518)),
         )
+        thr = float(inf.get("detection_score_threshold", 0.35))
         self.panoramic_head = PanoramicHead(
             medclip=self.medclip,
             stage1_weights=inf.get("panoramic_stage1_weights", None),
             stage1_model=inf.get("panoramic_stage1_model", "yolo11m.pt"),
-            score_threshold=float(inf.get("detection_score_threshold", 0.35)),
+            score_threshold=thr,
             device=self.device,
         )
+        # BW / PA heads (zero-shot region detectors; modality-appropriate classes)
+        from models.heads.bitewing_head import BitewingHead
+        from models.heads.periapical_head import PeriapicalHead
+        self.bitewing_head = BitewingHead(self.medclip, score_threshold=thr, device=self.device)
+        self.periapical_head = PeriapicalHead(self.medclip, score_threshold=thr, device=self.device)
+        self.heads_2d = {
+            ModalityType.OPG: self.panoramic_head,
+            ModalityType.BW: self.bitewing_head,
+            ModalityType.PA: self.periapical_head,
+        }
         self.postprocessor = PostProcessor.from_config(config)
         self.clusterer = FindingClusterer()
         # 3D CBCT path: per-slice detector + C2 neighbour-consistency decision.
@@ -134,16 +145,21 @@ class InferenceEngine:
             display_bgr = pre.display_bgr
             disp_h = display_bgr.shape[0]
 
-            raw_dets = self.panoramic_head.detect(display_bgr)
-            audit.append({"step": "detect", "raw_detections": len(raw_dets)})
+            head = self.heads_2d.get(modality_resolved, self.panoramic_head)
+            raw_dets = head.detect(display_bgr)
+            audit.append({"step": "detect", "head": type(head).__name__,
+                          "raw_detections": len(raw_dets)})
 
-            fdi_map = self.panoramic_head._stage1(display_bgr)
+            # FDI tooth grid only exists for the panoramic head; BW/PA cluster by
+            # spatial proximity (DBSCAN) since they carry no per-tooth FDI map.
+            fdi_map = head._stage1(display_bgr) if modality_resolved == ModalityType.OPG else None
             dets = self.postprocessor.process(
                 raw_dets, modality_resolved, fdi_map=fdi_map,
                 image_height_px=disp_h, audit_log=audit,
             )
 
-            clusters = self.clusterer.cluster(dets, image_height_px=disp_h)
+            fdi_conf = 1.0 if modality_resolved == ModalityType.OPG else 0.0
+            clusters = self.clusterer.cluster(dets, image_height_px=disp_h, fdi_confidence=fdi_conf)
             audit.append({"step": "cluster", "n_clusters": len(clusters)})
 
             annotated = self.renderer.render_2d(display_bgr, clusters)

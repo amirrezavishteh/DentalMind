@@ -77,6 +77,23 @@ def test_cbct_input_routing():
     assert _is_cbct_input("opg.png", ModalityType.CBCT) is True
 
 
+def test_2d_heads_route_by_modality():
+    """BW/PA/OPG each dispatch to their own head with modality-appropriate classes."""
+    import numpy as np
+    from models.medclip.stub import StubEncoder
+    from models.heads.bitewing_head import BitewingHead, _BW_KEYS
+    from models.heads.periapical_head import PeriapicalHead, _PA_KEYS
+
+    enc = StubEncoder()
+    img = (np.random.rand(200, 400, 3) * 255).astype("uint8")
+    bw = BitewingHead(enc, score_threshold=0.0)
+    pa = PeriapicalHead(enc, score_threshold=0.0)
+    # periapical_lesion is a PA target but never a bitewing target
+    assert "periapical_lesion" in _PA_KEYS and "periapical_lesion" not in _BW_KEYS
+    assert all(d.class_name in _BW_KEYS for d in bw.detect(img))
+    assert all(d.class_name in _PA_KEYS for d in pa.detect(img))
+
+
 def test_cbct_chain_consistent_lesion_to_cluster():
     """C2 decision -> C3 cluster across slices yields a per-region finding."""
     box = [0.4, 0.4, 0.6, 0.6]

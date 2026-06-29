@@ -105,6 +105,12 @@ DENTALMIND_MEDCLIP=stub dentalmine infer \
 # real inference (BiomedCLIP/MMKD encoder):
 dentalmine infer --input <your_opg.jpg> --modality opg --output ./results/
 ```
+
+All three 2D modalities route to their own head (`--modality opg|bw|pa`, or `auto`):
+panoramic uses a 32-tooth FDI grid + per-tooth zero-shot; bitewing and periapical
+use zero-shot region detectors restricted to modality-appropriate pathologies
+(BW: interproximal caries / bone loss / calculus; PA: periapical lesion / deep
+caries / bone loss). All are placeholders pending trained detectors.
 Outputs in `--output/`: `findings.json` (schema-validated), `original.png`,
 `annotated.png` (colour overlay), `treatment_card.txt` (ranked per-tooth options
 + disclaimer), `summary.txt` (plain-language patient summary).
@@ -217,7 +223,7 @@ dentalmine/
 │   ├── backbone/dentvfm.py      shared ViT encoder (Phase 1/3)
 │   ├── medclip/                 MMKD-CLIP → BiomedCLIP → Stub factory
 │   ├── madclip/                 c1 (cross-slice), c2 (consistency), c3 (cluster), c4 (prompts)
-│   └── heads/panoramic_head.py  two-stage OPG head (YOLO + Med-CLIP zero-shot)
+│   └── heads/                   panoramic (OPG), bitewing, periapical, cbct heads
 ├── pipeline/                    router, preprocessor, postprocessor, overlay, inference_engine
 ├── training/
 │   ├── baseline_clip_2d3d.py    ⭐ unified shared-CLIP 2D+3D baseline
