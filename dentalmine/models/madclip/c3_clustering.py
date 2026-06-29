@@ -172,5 +172,16 @@ class FindingClusterer:
                 c.urgency = _URGENCY_MAP[spec["urgency"]]
         return clusters
 
-    def merge_with_3d(self, clusters_2d, nnunet_output):  # pragma: no cover - later phase
-        raise NotImplementedError("3D merge requires the CBCT/nnU-Net phase.")
+    def merge_with_3d(self, clusters_2d, nnunet_output):
+        """Attach 3D segmentation evidence to 2D clusters.
+
+        nnunet_output: dict {fdi_str: 3D boolean tooth mask} from
+        NNUNetWrapper.get_tooth_instances. Clusters whose FDI matches a
+        segmented tooth get has_3d_mask=True; segmented teeth with no matching
+        2D cluster are left as-is (no fabricated findings).
+        """
+        instances = nnunet_output or {}
+        for c in clusters_2d:
+            if c.tooth_fdi in instances:
+                c.has_3d_mask = True
+        return clusters_2d

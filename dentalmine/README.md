@@ -235,7 +235,8 @@ dentalmine/
 │   ├── backbone/dentvfm.py      shared ViT encoder (Phase 1/3)
 │   ├── medclip/                 MMKD-CLIP → BiomedCLIP → Stub factory
 │   ├── madclip/                 c1 (cross-slice), c2 (consistency), c3 (cluster), c4 (prompts)
-│   └── heads/                   panoramic (OPG), bitewing, periapical, cbct heads
+│   ├── heads/                   panoramic (OPG), bitewing, periapical, cbct heads
+│   └── segmentation/            nnunet_wrapper (3D CBCT seg + tooth-instance FDI split)
 ├── pipeline/                    router, preprocessor, postprocessor, overlay,
 │                                inference_engine, serve (FastAPI), evaluate (batch report)
 ├── training/
