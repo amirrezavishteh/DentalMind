@@ -197,10 +197,11 @@ def compute_prototypes(encoder, labels: List[str], device: str) -> torch.Tensor:
     return text_f.to(device)
 
 
-def train(args):
+def load_shared_encoder(args, device):
+    """Load the shared Med-CLIP encoder (MMKD-CLIP -> BiomedCLIP) and verify it
+    is trainable. Shared by the 2D fine-tune and the unified 2D+3D baseline."""
     from config_loader import load_config
 
-    device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
     cfg = load_config(getattr(args, "config", None))
     print(f"Loading Med-CLIP encoder on {device}...")
     encoder = MedCLIPFactory.get(config=cfg, device=device, cache=False)
@@ -211,7 +212,18 @@ def train(args):
             f"ensure BiomedCLIP/open_clip loaded correctly."
         )
     print(f"Active encoder: {encoder.name}")
+    return encoder
 
+
+def train(args):
+    device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
+    encoder = load_shared_encoder(args, device)
+    finetune_2d(encoder, args, device)
+
+
+def finetune_2d(encoder, args, device):
+    """Fine-tune the (shared) Med-CLIP image tower on 2D crops. Returns the
+    trained encoder so a caller can reuse it for the 3D branch."""
     data_root = Path(args.data_root)
     train_ds, val_ds, labels = build_dataset(data_root, encoder)
     print(f"Dataset: {len(train_ds)} train crops, {len(val_ds)} held-out val crops "
@@ -276,12 +288,14 @@ def train(args):
                 print(f"  epoch {epoch+1}/{args.epochs} batch {batch_idx+1}/{n_batches} "
                       f"loss={loss.item():.4f} running_acc={n_correct/n_total:.3f} "
                       f"elapsed={elapsed:.1f}s", flush=True)
+            if getattr(args, "fast_dev_run", False):
+                break
 
         train_acc = n_correct / n_total
         print(f"epoch {epoch+1}/{args.epochs}  train_loss={total_loss/n_total:.4f}  "
               f"train_acc={train_acc:.3f}", flush=True)
 
-        if val_loader is not None:
+        if val_loader is not None and not getattr(args, "fast_dev_run", False):
             val_loss, val_acc = evaluate(model, val_loader, prototypes, logit_scale, device)
             print(f"epoch {epoch+1}/{args.epochs}  HELD-OUT val_loss={val_loss:.4f}  "
                   f"val_acc={val_acc:.3f}  (gap vs train_acc: {train_acc - val_acc:+.3f})",
@@ -290,6 +304,9 @@ def train(args):
                 best_val_acc = val_acc
                 best_state = copy.deepcopy(model.state_dict())
             model.train()
+
+        if getattr(args, "fast_dev_run", False):
+            break
 
     out_path = Path(args.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -300,6 +317,7 @@ def train(args):
         print(f"Saved BEST checkpoint (val_acc={best_val_acc:.3f}) -> {out_path}")
     else:
         print(f"No val set was available — saved final-epoch weights -> {out_path}")
+    return encoder
 
 
 @torch.no_grad()

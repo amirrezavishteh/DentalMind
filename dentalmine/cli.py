@@ -184,6 +184,33 @@ def train_phase4(
     train(ns)
 
 
+@train_app.command("baseline")
+def train_baseline(
+    data_root: str = typer.Option("../data/2D", "--data-root"),
+    cbct_dir: str = typer.Option("../data/3D/cbct", "--cbct-dir"),
+    labels_dir: Optional[str] = typer.Option(None, "--labels-dir"),
+    output: str = typer.Option("../weights/baseline_clip_2d.pt", "--output"),
+    output_3d: str = typer.Option("../weights/baseline_clip_c1_3d.pt", "--output-3d"),
+    epochs: int = typer.Option(10, "--epochs"),
+    epochs_3d: int = typer.Option(50, "--epochs-3d"),
+    batch_size: int = typer.Option(64, "--batch-size"),
+    lr: float = typer.Option(1e-5, "--lr"),
+    k: int = typer.Option(2, "--k"),
+    workers: int = typer.Option(4, "--workers"),
+    device: Optional[str] = typer.Option(None, "--device"),
+    config: Optional[str] = typer.Option(None, "--config"),
+    fast_dev_run: bool = typer.Option(False, "--fast-dev-run"),
+):
+    """UNIFIED BASELINE: one shared Med-CLIP backbone trained on 2D + 3D."""
+    from training.baseline_clip_2d3d import build_argparser, train
+    ns = build_argparser().parse_args([])
+    ns.data_root, ns.cbct_dir, ns.labels_dir = data_root, cbct_dir, labels_dir
+    ns.output, ns.output_3d = output, output_3d
+    ns.epochs, ns.epochs_3d, ns.batch_size, ns.lr, ns.k = epochs, epochs_3d, batch_size, lr, k
+    ns.workers, ns.device, ns.config, ns.fast_dev_run = workers, device, config, fast_dev_run
+    train(ns)
+
+
 @train_app.command("clip-backbone")
 def train_clip_backbone(
     data_root: str = typer.Option("../data/2D", "--data-root"),
